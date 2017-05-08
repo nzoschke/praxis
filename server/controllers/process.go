@@ -2,16 +2,19 @@ package controllers
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 
-	"github.com/convox/api"
+	"github.com/convox/praxis/api"
 	"github.com/convox/praxis/types"
 )
 
-func ProcessExec(w http.ResponseWriter, r *http.Request, c *api.Context) error {
+func ProcessExec(rw io.ReadWriteCloser, c *api.Context) error {
+	defer rw.Close()
+
 	app := c.Var("app")
 	pid := c.Var("pid")
 
@@ -20,7 +23,7 @@ func ProcessExec(w http.ResponseWriter, r *http.Request, c *api.Context) error {
 	width := c.Header("Width")
 
 	opts := types.ProcessExecOptions{
-		Stream: types.Stream{Reader: r.Body, Writer: w},
+		Stream: rw,
 	}
 
 	if height != "" {
@@ -41,14 +44,23 @@ func ProcessExec(w http.ResponseWriter, r *http.Request, c *api.Context) error {
 		opts.Width = w
 	}
 
-	w.Header().Add("Trailer", "Exit-Code")
+	// if r.ProtoAtLeast(2, 0) {
+	//   w.Header().Add("Trailer", "Exit-Code")
+	// }
 
 	code, err := Provider.ProcessExec(app, pid, command, opts)
 	if err != nil {
 		return err
 	}
 
-	w.Header().Set("Exit-Code", fmt.Sprintf("%d", code))
+	fmt.Printf("code = %+v\n", code)
+
+	// if r.ProtoAtLeast(2, 0) {
+	//   w.Header().Set("Exit-Code", fmt.Sprintf("%d", code))
+	// } else {
+	//   fmt.Fprintf(opts.Stream, "SOMEUUID: %d\n", code)
+	//   fmt.Fprintf(w, "SOMEUUID: %d\n", code)
+	// }
 
 	return err
 }
@@ -107,7 +119,9 @@ func ProcessLogs(w http.ResponseWriter, r *http.Request, c *api.Context) error {
 	return nil
 }
 
-func ProcessRun(w http.ResponseWriter, r *http.Request, c *api.Context) error {
+func ProcessRun(rw io.ReadWriteCloser, c *api.Context) error {
+	defer rw.Close()
+
 	app := c.Var("app")
 
 	command := c.Header("Command")
@@ -170,7 +184,7 @@ func ProcessRun(w http.ResponseWriter, r *http.Request, c *api.Context) error {
 		Ports:       ports,
 		Release:     release,
 		Service:     service,
-		Stream:      types.Stream{Reader: r.Body, Writer: w},
+		Stream:      rw,
 		Volumes:     volumes,
 	}
 
@@ -211,11 +225,13 @@ func ProcessRun(w http.ResponseWriter, r *http.Request, c *api.Context) error {
 
 	c.Logf("at=params release=%q service=%q height=%d width=%d", opts.Release, opts.Service, opts.Height, opts.Width)
 
-	w.Header().Add("Trailer", "Exit-Code")
+	// w.Header().Add("Trailer", "Exit-Code")
 
 	code, err := Provider.ProcessRun(app, opts)
 
-	w.Header().Set("Exit-Code", fmt.Sprintf("%d", code))
+	// w.Header().Set("Exit-Code", fmt.Sprintf("%d", code))
+
+	fmt.Printf("code = %+v\n", code)
 
 	return err
 }
