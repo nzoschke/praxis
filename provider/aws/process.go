@@ -82,10 +82,10 @@ func (p *Provider) ProcessExec(app, pid, command string, opts types.ProcessExecO
 	err = dc.StartExec(eres.ID, docker.StartExecOptions{
 		Detach:       false,
 		Tty:          true,
+		RawTerminal:  true,
 		InputStream:  ioutil.NopCloser(opts.Stream),
 		OutputStream: opts.Stream,
 		ErrorStream:  opts.Stream,
-		RawTerminal:  true,
 		Success:      success,
 	})
 	if err != nil {
@@ -273,17 +273,6 @@ func (p *Provider) ProcessStop(app, pid string) error {
 	}
 
 	return nil
-}
-
-func (p *Provider) fetchTaskDefinition(arn string) (*ecs.TaskDefinition, error) {
-	res, err := p.ECS().DescribeTaskDefinition(&ecs.DescribeTaskDefinitionInput{
-		TaskDefinition: aws.String(arn),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return res.TaskDefinition, nil
 }
 
 func (p *Provider) processFromTask(app string, t *ecs.Task) (*types.Process, error) {
