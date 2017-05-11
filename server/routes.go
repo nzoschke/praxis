@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/convox/api"
+	"github.com/convox/praxis/api"
 	"github.com/convox/praxis/server/controllers"
 )
 
@@ -43,11 +43,12 @@ func Routes(server *api.Server) {
 	auth.Route("object.fetch", "GET", "/apps/{app}/objects/{key:.*}", controllers.ObjectFetch)
 	auth.Route("object.store", "POST", "/apps/{app}/objects/{key:.*}", controllers.ObjectStore)
 
-	auth.Route("process.exec", "POST", "/apps/{app}/processes/{pid}/exec", controllers.ProcessExec)
+	auth.Stream("process.exec", "/apps/{app}/processes/{pid}/exec", controllers.ProcessExec)
+	auth.Stream("process.run", "/apps/{app}/processes/run", controllers.ProcessRun)
+
 	auth.Route("process.get", "GET", "/apps/{app}/processes/{pid}", controllers.ProcessGet)
 	auth.Route("process.logs", "GET", "/apps/{app}/processes/{pid}/logs", controllers.ProcessLogs)
 	auth.Route("process.list", "GET", "/apps/{app}/processes", controllers.ProcessList)
-	auth.Route("process.run", "POST", "/apps/{app}/processes/run", controllers.ProcessRun)
 	auth.Route("process.start", "POST", "/apps/{app}/processes", controllers.ProcessStart)
 	auth.Route("process.stop", "DELETE", "/apps/{app}/processes/{pid}", controllers.ProcessStop)
 
@@ -71,6 +72,7 @@ func Routes(server *api.Server) {
 
 	auth.Route("system.get", "GET", "/system", controllers.SystemGet)
 	auth.Route("system.logs", "GET", "/system/logs", controllers.SystemLogs)
+	auth.Route("system.options", "OPTIONS", "/system", controllers.SystemOptions)
 	auth.Route("system.update", "POST", "/system", controllers.SystemUpdate)
 
 	auth.Route("table.get", "GET", "/apps/{app}/tables/{table}", controllers.TableGet)
