@@ -160,7 +160,7 @@ func (p *Provider) containerStart(c container, app, release string) (string, err
 
 	data, err := exec.Command("docker", args...).CombinedOutput()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%s: %s", string(data), err)
 	}
 
 	id := strings.TrimSpace(string(data))
